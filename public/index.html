@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document AI Data Extractor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="min-h-screen bg-slate-900 text-slate-100 flex justify-center">
+    <!-- main section -->
+    <main class="w-full max-w-3xl p-6 mt-10">
+      <h1 class="text-3xl font-semibold mb-2">AI Document Data Extractor</h1>
+      <p>
+        Upload a passport or any document. The AI model will read the text and
+        extract the data
+      </p>
+
+      <!-- form section -->
+      <section
+        class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-6"
+      >
+        <form id="upload-form" class="space-y-4">
+          <div>
+            <label
+              for="document-input"
+              class="block text-sm font-medium text-slate-200 mb-1"
+              >Choose document</label
+            >
+            <input
+              type="file"
+              class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-emerald-500 file:text-slate-900 hover:file:bg-emerald-400 cursor-pointer"
+            />
+          </div>
+
+          <!-- submit button -->
+          <button
+            class="rounded-md px-4 py-2 bg-emerald-500 text-slate-900 font-medium hover:bg-emerald-400"
+            type="submit"
+          >
+            Analyze
+          </button>
+        </form>
+
+        <p id="status" class="text-sm text-slate-300 mt-3 min-h-[1.5rem]"></p>
+      </section>
+
+      <!-- results section -->
+      <section
+        id="result"
+        class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 hidden"
+      ></section>
+    </main>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
