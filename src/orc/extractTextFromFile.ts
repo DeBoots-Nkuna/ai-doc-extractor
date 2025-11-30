@@ -1,27 +1,32 @@
 import fs from 'fs'
 import Tesseract from 'tesseract.js'
-import pdfParse from 'pdf-parse'
+import { PDFParse } from 'pdf-parse'
 
 export async function extractTextFromFile(
   filePath: string,
   mimeType: string
 ): Promise<string> {
-  //reading pdf file
+  // Read file once as a buffer (for PDF)
   const buffer = fs.readFileSync(filePath)
 
-  //if statement for pdf branch
+  // --- PDF branch ---
   if (mimeType.includes('pdf')) {
-    const data = await (pdfParse as any)(buffer)
-    return data?.text ?? ''
+    const parser = new PDFParse({ data: buffer })
+    try {
+      const result = await parser.getText()
+      return result?.text ?? ''
+    } finally {
+      // Ensure worker/resources are released
+      await parser.destroy().catch(() => {})
+    }
   }
 
-  //if statement for image branch eg. jpg, png
+  // --- Image branch (jpg, png, etc.) via Tesseract OCR ---
   if (mimeType.startsWith('image/')) {
     const result = await Tesseract.recognize(filePath, 'eng')
     return result.data.text ?? ''
   }
 
-  //fall back
-
+  // --- Fallback for unknown mime types ---
   return ''
 }
