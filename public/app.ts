@@ -1,39 +1,35 @@
 type DocType = 'passport' | 'id_card' | 'unknown'
+
 interface ExtractionFields {
   firstName: string | null
   surname: string | null
   idNumber: string | null
 }
+
 interface AnalyzeResponse {
   documentType: DocType
   fields: ExtractionFields
   rawText: string
 }
+
 const form = document.getElementById('upload-form') as HTMLFormElement | null
 const statusDiv = document.getElementById(
   'status'
 ) as HTMLParagraphElement | null
 const resultDiv = document.getElementById('result') as HTMLDivElement | null
+const fileInput = document.getElementById(
+  'document-input'
+) as HTMLInputElement | null
 
-// if statement for sanity checks
-if (!form || !statusDiv || !resultDiv) {
-  throw new Error('Required DOM elements not found')
+// sanity checks
+if (!form || !statusDiv || !resultDiv || !fileInput) {
+  throw new Error(
+    'Required DOM elements not found (form/status/result/file input)'
+  )
 }
 
 form.addEventListener('submit', async (event: SubmitEvent) => {
-  //prevent refresh
   event.preventDefault()
-
-  //collecting uploaded file data
-  const fileInput = document.getElementById(
-    'document-input'
-  ) as HTMLInputElement | null
-
-  //if statement to check if file input exists
-  if (!fileInput) {
-    statusDiv.textContent = 'File input not found'
-    return
-  }
 
   const file = fileInput.files?.[0]
 
@@ -45,11 +41,8 @@ form.addEventListener('submit', async (event: SubmitEvent) => {
   statusDiv.textContent = 'Analyzing document...'
   resultDiv.classList.add('hidden')
 
-  //collecting form data
   const formData = new FormData()
   formData.append('document', file)
-
-  //try/catch
 
   try {
     const response = await fetch('/api/analyze', {
@@ -57,30 +50,24 @@ form.addEventListener('submit', async (event: SubmitEvent) => {
       body: formData,
     })
 
-    //if statement to check status
     if (!response.ok) {
       let errorMessage = 'Server error'
-
-      //try/catch
       try {
         const errData = (await response.json()) as { error?: string }
-
-        //if statement
         if (errData.error) errorMessage = errData.error
-      } catch (error) {
-        //ignoring json parse errors and keeping it generic error message
+      } catch {
+        // ignore JSON parse errors
       }
-
       throw new Error(errorMessage)
     }
 
-    //collecting returned response data
     const data = (await response.json()) as AnalyzeResponse
     statusDiv.textContent = 'Done.'
-
-    //function call
     renderResult(data)
-  } catch (error) {}
+  } catch (error) {
+    console.error(error)
+    statusDiv.textContent = 'Error analyzing document'
+  }
 })
 
 //result rendering method
@@ -95,14 +82,13 @@ const renderResult = (data: AnalyzeResponse): void => {
   const table = document.createElement('table')
   table.className = 'w-full border-collapse text-sm mb-4'
   const tbody = document.createElement('tbody')
-
-  Object.entries(fields).forEach(([key, value]) => {
+  Object.entries(fields).forEach(([key, value]: [string, string | null]) => {
     const tr = document.createElement('tr')
     tr.className = 'border-b border-slate-700/80'
 
     const keyTd = document.createElement('td')
     keyTd.textContent = key
-    keyTd.className = 'py-2 pr-4 font-medium text-slat-200'
+    keyTd.className = 'py-2 pr-4 font-medium text-slate-200'
 
     const valueTd = document.createElement('td')
     valueTd.textContent = value == null ? '' : String(value)
