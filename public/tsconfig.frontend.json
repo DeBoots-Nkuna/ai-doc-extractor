@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "none", // simple script, no modules
+    "outDir": "./", // emit app.js into public/
+    "strict": true,
+    "noEmitOnError": true,
+    "lib": ["DOM", "ES2015"], // browser + modern JS
+    "types": [] // IMPORTANT: no node types here
+  },
+  "include": ["app.ts"],
+  "exclude": []
+}

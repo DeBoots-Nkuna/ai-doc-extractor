@@ -1,0 +1,34 @@
+# Node dependencies
+node_modules/
+
+# TypeScript build outputs
+dist/
+*.tsbuildinfo
+
+# Frontend build outputs
+public/app.js
+public/app.js.map
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Upload temp folder (from multer)
+uploads/
