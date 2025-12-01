@@ -1,18 +1,26 @@
-// Basic doc categories
-export type DocumentType = 'id_card' | 'passport' | 'qualification' | 'unknown'
+export type DocumentType = 'passport' | 'id_card' | 'qualification' | 'unknown'
 
-export interface ExtractedFields {
-  firstName?: string
-  surname?: string
-  fullNames?: string
+export interface ExtractionFields {
+  // person
+  firstName: string | null
+  surname: string | null
+  fullNames: string | null
 
-  idNumber?: string
-  passportNumber?: string
+  // id docs
+  idNumber: string | null
 
-  dateOfBirth?: string
-  issueDate?: string
-  expiryDate?: string
+  // passport
+  passportNumber: string | null
+  dateOfBirth: string | null
+  expiryDate: string | null
+  issueDate: string | null
 
-  // free space for extra info you might show later
-  qualificationName?: string
+  // qualifications
+  qualificationName: string | null
+}
+
+export interface AnalyzeResult {
+  documentType: DocumentType
+  fields: ExtractionFields
+  rawText: string
 }

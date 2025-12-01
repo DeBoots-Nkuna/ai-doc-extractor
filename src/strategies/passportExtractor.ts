@@ -1,4 +1,4 @@
-import { ExtractedFields } from '../extraction/types'
+import { ExtractionFields } from '../extraction/types'
 
 //function date formatter
 function parseMrzDate(yyMMdd: string): string | undefined {
@@ -6,7 +6,7 @@ function parseMrzDate(yyMMdd: string): string | undefined {
   return yyMMdd
 }
 
-export function extractFromPassport(text: string): ExtractedFields {
+export function extractFromPassport(text: string): Partial<ExtractionFields> {
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -16,7 +16,7 @@ export function extractFromPassport(text: string): ExtractedFields {
     (l) => l.length >= 30 && l.includes('<') && /[A-Z]/.test(l)
   )
 
-  const result: ExtractedFields = {}
+  const result: Partial<ExtractionFields> = {}
 
   if (mrzLines.length >= 2) {
     const [line1Raw, line2Raw] = mrzLines

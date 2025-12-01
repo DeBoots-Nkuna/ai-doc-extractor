@@ -4,7 +4,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { extractTextFromFile } from './orc/extractTextFromFile'
-import { analyzeExtractedText } from './extraction'
+import { analyzeDocument } from './extraction'
 
 //server
 const app = express()
@@ -24,16 +24,11 @@ app.post('/api/analyze', upload.single('document'), async (req, res) => {
   const filePath = req.file.path
   const mimeType = req.file.mimetype
 
-  //try/catch
-
   try {
     const rawText = await extractTextFromFile(filePath, mimeType)
-    const { documentType, fields } = analyzeExtractedText(rawText)
-    return res.json({
-      documentType,
-      rawText,
-      ...fields,
-    })
+    const result = analyzeDocument(rawText)
+
+    return res.json(result)
   } catch (error: any) {
     console.error(error)
     return res

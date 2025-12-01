@@ -3,7 +3,19 @@ import { DocumentType } from './types'
 export function detectDocumentType(text: string): DocumentType {
   const lower = text.toLowerCase()
 
-  if (lower.includes('identity number') || lower.includes('id card')) {
+  // 13-digit SA ID present?
+  const has13DigitId = /\b\d{13}\b/.test(text)
+
+  // make ID card detection very forgiving
+  const looksLikeIdCard =
+    has13DigitId ||
+    lower.includes('identity number') ||
+    lower.includes('national identity') ||
+    lower.includes('identity card') ||
+    lower.includes('identity caro') ||
+    lower.includes('identity car')
+
+  if (looksLikeIdCard) {
     return 'id_card'
   }
 

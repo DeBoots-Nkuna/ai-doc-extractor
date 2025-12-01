@@ -1,4 +1,4 @@
-import { ExtractedFields } from '../extraction/types'
+import { ExtractionFields } from '../extraction/types'
 import { FieldConfig, runFieldConfigs } from '../extraction/runFieldConfigs'
 
 const QUALIFICATION_CONFIGS: FieldConfig[] = [
@@ -20,6 +20,6 @@ const QUALIFICATION_CONFIGS: FieldConfig[] = [
   },
 ]
 
-export function extractFromQualification(text: string): ExtractedFields {
+export function extractFromQualification(text: string): Partial<ExtractionFields> {
   return runFieldConfigs(text, QUALIFICATION_CONFIGS)
 }

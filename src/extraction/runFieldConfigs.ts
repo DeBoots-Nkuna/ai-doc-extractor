@@ -1,7 +1,7 @@
-import { ExtractedFields } from './types'
+import { ExtractionFields } from './types'
 
 export type FieldConfig = {
-  field: keyof ExtractedFields
+  field: keyof ExtractionFields
   patterns: RegExp[]
   postProcess?: (value: string) => string
 }
@@ -9,9 +9,9 @@ export type FieldConfig = {
 export function runFieldConfigs(
   text: string,
   configs: FieldConfig[]
-): ExtractedFields {
+): Partial<ExtractionFields> {
   const cleaned = text.replace(/\s+/g, ' ').trim()
-  const result: ExtractedFields = {}
+  const result: Partial<ExtractionFields> = {}
 
   for (const cfg of configs) {
     if (result[cfg.field]) continue
