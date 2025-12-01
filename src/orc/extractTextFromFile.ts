@@ -16,7 +16,6 @@ export async function extractTextFromFile(
       const result = await parser.getText()
       return result?.text ?? ''
     } finally {
-      // Ensure worker/resources are released
       await parser.destroy().catch(() => {})
     }
   }
