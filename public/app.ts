@@ -20,7 +20,8 @@ interface ExtractionFields {
 
 interface AnalyzeResponse {
   documentType: DocType
-  fields: ExtractionFields | null | undefined
+  // Backend might return nested `fields` or flatten them at top-level
+  fields?: ExtractionFields | null
   rawText: string
 }
 
@@ -45,11 +46,17 @@ const FIELD_CONFIG: Record<
     { key: 'surname', label: 'Surname' },
     { key: 'qualificationName', label: 'Qualification' },
   ],
+  // Show every field with placeholders when type is unknown
   unknown: [
-    // for unknown you can either show nothing,
-    // or a generic minimal set:
     { key: 'firstName', label: 'First name' },
     { key: 'surname', label: 'Surname' },
+    { key: 'fullNames', label: 'Full names' },
+    { key: 'idNumber', label: 'ID Number' },
+    { key: 'passportNumber', label: 'Passport Number' },
+    { key: 'dateOfBirth', label: 'Date of Birth' },
+    { key: 'issueDate', label: 'Issue Date' },
+    { key: 'expiryDate', label: 'Expiry Date' },
+    { key: 'qualificationName', label: 'Qualification' },
   ],
 }
 
@@ -123,7 +130,9 @@ const renderResult = (data: AnalyzeResponse): void => {
       ? documentType
       : 'unknown'
 
-  // 2) Safe fields – ensure we *never* work with undefined
+  // 2) Safe fields – ensure we *never* work with undefined.
+  // Handle both shapes: nested `fields` or flattened fields on the response.
+  const fallbackFlatFields = extractFlatFieldsFromResponse(data)
   const safeFields: ExtractionFields = {
     firstName: null,
     surname: null,
@@ -134,7 +143,8 @@ const renderResult = (data: AnalyzeResponse): void => {
     expiryDate: null,
     issueDate: null,
     qualificationName: null,
-    ...(fields ?? {}), // merge in any values from backend
+    ...(fields ?? {}),
+    ...fallbackFlatFields,
   }
 
   const docType = document.createElement('p')
@@ -146,11 +156,14 @@ const renderResult = (data: AnalyzeResponse): void => {
   const tbody = document.createElement('tbody')
 
   const fieldConfig = FIELD_CONFIG[safeDocType] ?? []
+  const placeholder = 'Not provided'
+  let hasAnyRow = false
 
   fieldConfig.forEach(({ key, label }) => {
     const value = safeFields[key]
-
-    if (value == null || value === '') return
+    const displayValue =
+      value === null || value === '' ? placeholder : String(value)
+    hasAnyRow = true
 
     const tr = document.createElement('tr')
     tr.className = 'border-b border-slate-700/80'
@@ -160,7 +173,7 @@ const renderResult = (data: AnalyzeResponse): void => {
     keyTd.className = 'py-2 pr-4 font-medium text-slate-200'
 
     const valueTd = document.createElement('td')
-    valueTd.textContent = String(value)
+    valueTd.textContent = displayValue
     valueTd.className = 'py-2 text-slate-300'
 
     tr.appendChild(keyTd)
@@ -168,7 +181,56 @@ const renderResult = (data: AnalyzeResponse): void => {
     tbody.appendChild(tr)
   })
 
+  if (!hasAnyRow) {
+    const tr = document.createElement('tr')
+    tr.className = 'border-b border-slate-700/80'
+
+    const keyTd = document.createElement('td')
+    keyTd.textContent = 'Info'
+    keyTd.className = 'py-2 pr-4 font-medium text-slate-200'
+
+    const valueTd = document.createElement('td')
+    valueTd.textContent = 'No fields extracted for this document.'
+    valueTd.className = 'py-2 text-slate-300'
+
+    tr.appendChild(keyTd)
+    tr.appendChild(valueTd)
+    tbody.appendChild(tr)
+  }
+
   table.appendChild(tbody)
+
+  // Create download button
+  const downloadBtn = document.createElement('button')
+  downloadBtn.textContent = 'Download as Excel (CSV)'
+  downloadBtn.className =
+    'mb-3 inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 text-white text-xs hover:bg-emerald-500 transition cursor-pointer'
+
+  downloadBtn.addEventListener('click', () => {
+    // Build CSV from raw text: line number + text content
+    const rows: string[] = []
+    rows.push('Line,Text')
+
+    const rawLines = (rawText || '').split(/\r?\n/)
+    rawLines.forEach((line, idx) => {
+      const safeValue = line.replace(/"/g, '""')
+      rows.push(`${idx + 1},"${safeValue}"`)
+    })
+
+    const csvContent = rows.join('\n')
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `document-${safeDocType}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  })
 
   const rawHeading = document.createElement('h2')
   rawHeading.textContent = 'Raw OCR Text'
@@ -181,8 +243,37 @@ const renderResult = (data: AnalyzeResponse): void => {
 
   resultDiv.innerHTML = ''
   resultDiv.appendChild(docType)
+  resultDiv.appendChild(downloadBtn)
   resultDiv.appendChild(table)
   resultDiv.appendChild(rawHeading)
   resultDiv.appendChild(rawPre)
   resultDiv.classList.remove('hidden')
+}
+
+// Helper to read fields in case backend returns them flattened
+function extractFlatFieldsFromResponse(
+  data: AnalyzeResponse
+): Partial<ExtractionFields> {
+  const keys: (keyof ExtractionFields)[] = [
+    'firstName',
+    'surname',
+    'fullNames',
+    'idNumber',
+    'passportNumber',
+    'dateOfBirth',
+    'expiryDate',
+    'issueDate',
+    'qualificationName',
+  ]
+
+  const result: Partial<ExtractionFields> = {}
+  const flatData = data as unknown as Record<string, unknown>
+  for (const key of keys) {
+    const value = flatData[key]
+    if (typeof value === 'string' || value === null) {
+      result[key] = value
+    }
+  }
+
+  return result
 }

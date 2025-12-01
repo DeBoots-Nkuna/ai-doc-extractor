@@ -10,10 +10,11 @@ export function detectDocumentType(text: string): DocumentType {
   const looksLikeIdCard =
     has13DigitId ||
     lower.includes('identity number') ||
-    lower.includes('national identity') ||
+    lower.includes('national identity card') ||
     lower.includes('identity card') ||
     lower.includes('identity caro') ||
-    lower.includes('identity car')
+    lower.includes('identity car') ||
+    lower.includes('tity card')
 
   if (looksLikeIdCard) {
     return 'id_card'
@@ -24,11 +25,12 @@ export function detectDocumentType(text: string): DocumentType {
   }
 
   if (
+    (lower.includes('diploma') && lower.includes('identity number')) ||
     lower.includes('diploma') ||
     lower.includes('degree') ||
     lower.includes('certificate') ||
     lower.includes('awarded to') ||
-    lower.includes('this is to certify that')
+    lower.includes('this is to certify that the')
   ) {
     return 'qualification'
   }
