@@ -16,6 +16,8 @@ export function analyzeDocument(text: string): AnalyzeResult {
     expiryDate: null,
     issueDate: null,
     qualificationName: null,
+    qualificationType: null,
+    institutionName: null,
   }
 
   switch (documentType) {

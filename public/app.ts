@@ -16,6 +16,8 @@ interface ExtractionFields {
 
   //qualification-only
   qualificationName: string | null
+  qualificationType: string | null // NEW
+  institutionName: string | null
 }
 
 interface AnalyzeResponse {
@@ -44,7 +46,10 @@ const FIELD_CONFIG: Record<
   qualification: [
     { key: 'firstName', label: 'First name' },
     { key: 'surname', label: 'Surname' },
+    { key: 'qualificationType', label: 'Qualification type' },
     { key: 'qualificationName', label: 'Qualification' },
+    { key: 'institutionName', label: 'Institution' },
+    { key: 'issueDate', label: 'Date (issue/effective)' },
   ],
   // Show every field with placeholders when type is unknown
   unknown: [
@@ -56,7 +61,9 @@ const FIELD_CONFIG: Record<
     { key: 'dateOfBirth', label: 'Date of Birth' },
     { key: 'issueDate', label: 'Issue Date' },
     { key: 'expiryDate', label: 'Expiry Date' },
+    { key: 'qualificationType', label: 'Qualification type' },
     { key: 'qualificationName', label: 'Qualification' },
+    { key: 'institutionName', label: 'Institution' },
   ],
 }
 
@@ -130,8 +137,7 @@ const renderResult = (data: AnalyzeResponse): void => {
       ? documentType
       : 'unknown'
 
-  // 2) Safe fields – ensure we *never* work with undefined.
-  // Handle both shapes: nested `fields` or flattened fields on the response.
+  //safe fields
   const fallbackFlatFields = extractFlatFieldsFromResponse(data)
   const safeFields: ExtractionFields = {
     firstName: null,
@@ -143,6 +149,8 @@ const renderResult = (data: AnalyzeResponse): void => {
     expiryDate: null,
     issueDate: null,
     qualificationName: null,
+    qualificationType: null,
+    institutionName: null,
     ...(fields ?? {}),
     ...fallbackFlatFields,
   }
@@ -205,16 +213,32 @@ const renderResult = (data: AnalyzeResponse): void => {
   downloadBtn.textContent = 'Download as Excel (CSV)'
   downloadBtn.className =
     'mb-3 inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 text-white text-xs hover:bg-emerald-500 transition cursor-pointer'
-
   downloadBtn.addEventListener('click', () => {
-    // Build CSV from raw text: line number + text content
     const rows: string[] = []
-    rows.push('Line,Text')
 
+    // --- 1) Structured fields (what's in the table) ---
+    rows.push('Section,Field,Value')
+
+    fieldConfig.forEach(({ key, label }) => {
+      const rawValue = safeFields[key]
+      const displayValue =
+        rawValue === null || rawValue === '' ? placeholder : String(rawValue)
+
+      const safeLabel = label.replace(/"/g, '""')
+      const safeValue = displayValue.replace(/"/g, '""')
+
+      rows.push(`fields,"${safeLabel}","${safeValue}"`)
+    })
+
+    // --- 2) Blank separator row ---
+    rows.push('')
+
+    // --- 3) Raw OCR lines, with line numbers ---
+    rows.push('Section,Line,Text')
     const rawLines = (rawText || '').split(/\r?\n/)
     rawLines.forEach((line, idx) => {
       const safeValue = line.replace(/"/g, '""')
-      rows.push(`${idx + 1},"${safeValue}"`)
+      rows.push(`raw,${idx + 1},"${safeValue}"`)
     })
 
     const csvContent = rows.join('\n')
@@ -264,6 +288,8 @@ function extractFlatFieldsFromResponse(
     'expiryDate',
     'issueDate',
     'qualificationName',
+    'qualificationType',
+    'institutionName',
   ]
 
   const result: Partial<ExtractionFields> = {}

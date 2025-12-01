@@ -17,6 +17,8 @@ export interface ExtractionFields {
 
   // qualifications
   qualificationName: string | null
+  qualificationType: string | null
+  institutionName: string | null
 }
 
 export interface AnalyzeResult {
