@@ -27,6 +27,11 @@ interface AnalyzeResponse {
   rawText: string
 }
 
+//checking if all field values are null
+function areAllFieldsEmpty(fields: ExtractionFields): boolean {
+  return Object.values(fields).every((v) => v === null || v === '')
+}
+
 const FIELD_CONFIG: Record<
   DocType,
   { key: keyof ExtractionFields; label: string }[]
@@ -126,6 +131,7 @@ form.addEventListener('submit', async (event: SubmitEvent) => {
 })
 
 //result rendering method
+//result rendering method
 const renderResult = (data: AnalyzeResponse): void => {
   const { documentType, fields, rawText } = data
 
@@ -137,7 +143,7 @@ const renderResult = (data: AnalyzeResponse): void => {
       ? documentType
       : 'unknown'
 
-  //safe fields
+  // 2) Safe fields
   const fallbackFlatFields = extractFlatFieldsFromResponse(data)
   const safeFields: ExtractionFields = {
     firstName: null,
@@ -155,9 +161,21 @@ const renderResult = (data: AnalyzeResponse): void => {
     ...fallbackFlatFields,
   }
 
+  // 3) Check for the "totally unreadable" case
+  const totallyUnknown =
+    safeDocType === 'unknown' && areAllFieldsEmpty(safeFields)
+
+  // ---- Build DOM -------------------------------------------------
+
   const docType = document.createElement('p')
   docType.className = 'mb-3'
-  docType.textContent = 'Document type: ' + (safeDocType || 'Unknown')
+
+  if (totallyUnknown) {
+    docType.textContent =
+      'Document could not be read (no structured data extracted)'
+  } else {
+    docType.textContent = 'Document type: ' + (safeDocType || 'Unknown')
+  }
 
   const table = document.createElement('table')
   table.className = 'w-full border-collapse text-sm mb-4'
@@ -167,27 +185,50 @@ const renderResult = (data: AnalyzeResponse): void => {
   const placeholder = 'Not provided'
   let hasAnyRow = false
 
-  fieldConfig.forEach(({ key, label }) => {
-    const value = safeFields[key]
-    const displayValue =
-      value === null || value === '' ? placeholder : String(value)
-    hasAnyRow = true
-
+  if (totallyUnknown) {
+    // Special message row instead of 12x "Not provided"
     const tr = document.createElement('tr')
     tr.className = 'border-b border-slate-700/80'
 
     const keyTd = document.createElement('td')
-    keyTd.textContent = label
+    keyTd.textContent = 'Info'
     keyTd.className = 'py-2 pr-4 font-medium text-slate-200'
 
     const valueTd = document.createElement('td')
-    valueTd.textContent = displayValue
+    valueTd.textContent =
+      'Could not detect the document type or extract any fields. ' +
+      'It is likely a scanned image or very noisy text. ' +
+      'Try uploading a clearer, text-based version of this document.'
     valueTd.className = 'py-2 text-slate-300'
 
     tr.appendChild(keyTd)
     tr.appendChild(valueTd)
     tbody.appendChild(tr)
-  })
+    hasAnyRow = true
+  } else {
+    // Normal behaviour: show each configured field, with "Not provided" for missing ones
+    fieldConfig.forEach(({ key, label }) => {
+      const value = safeFields[key]
+      const displayValue =
+        value === null || value === '' ? placeholder : String(value)
+      hasAnyRow = true
+
+      const tr = document.createElement('tr')
+      tr.className = 'border-b border-slate-700/80'
+
+      const keyTd = document.createElement('td')
+      keyTd.textContent = label
+      keyTd.className = 'py-2 pr-4 font-medium text-slate-200'
+
+      const valueTd = document.createElement('td')
+      valueTd.textContent = displayValue
+      valueTd.className = 'py-2 text-slate-300'
+
+      tr.appendChild(keyTd)
+      tr.appendChild(valueTd)
+      tbody.appendChild(tr)
+    })
+  }
 
   if (!hasAnyRow) {
     const tr = document.createElement('tr')
@@ -208,7 +249,7 @@ const renderResult = (data: AnalyzeResponse): void => {
 
   table.appendChild(tbody)
 
-  // Create download button
+  // Create download button (unchanged)
   const downloadBtn = document.createElement('button')
   downloadBtn.textContent = 'Download as Excel (CSV)'
   downloadBtn.className =

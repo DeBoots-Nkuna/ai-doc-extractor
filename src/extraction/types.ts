@@ -19,10 +19,29 @@ export interface ExtractionFields {
   qualificationName: string | null
   qualificationType: string | null
   institutionName: string | null
+  qualifications?: QualificationSummary[]
 }
 
 export interface AnalyzeResult {
   documentType: DocumentType
   fields: ExtractionFields
+
   rawText: string
+}
+
+//qualification types
+export type QualificationSource =
+  | 'city_and_guilds'
+  | 'national_certificate'
+  | 'unknown'
+
+//qualification summary
+export interface QualificationSummary {
+  source: QualificationSource
+  title: string
+  level: string | null
+  awardingBody: string | null
+  country: string | null
+  awardedDate: string | null
+  modules: string[]
 }

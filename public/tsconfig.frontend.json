@@ -8,6 +8,6 @@
     "lib": ["DOM", "ES2017"],
     "types": []
   },
-  "include": ["app.ts"],
+  "include": ["*.ts"],
   "exclude": []
 }

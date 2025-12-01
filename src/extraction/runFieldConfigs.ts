@@ -1,7 +1,10 @@
 import { ExtractionFields } from './types'
 
+//defining key type fields to extract
+type SimpleFieldKey = Exclude<keyof ExtractionFields, 'qualifications'>
+
 export type FieldConfig = {
-  field: keyof ExtractionFields
+  field: SimpleFieldKey
   patterns: RegExp[]
   postProcess?: (value: string) => string
 }
@@ -26,7 +29,7 @@ export function runFieldConfigs(
     }
   }
 
-  // Generic: if we got fullNames but not firstName, derive it
+  // retrieve firstname and surname from fullname field.
   if (!result.firstName && result.fullNames) {
     const [first] = result.fullNames.split(/\s+/)
     if (first) {

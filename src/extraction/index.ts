@@ -3,8 +3,11 @@ import { detectDocumentType } from './detectDocumentType'
 import { extractFromIdCard } from '../strategies/idCardExtractor'
 import { extractFromPassport } from '../strategies/passportExtractor'
 import { extractFromQualification } from '../strategies/qualificationExtractor'
-export function analyzeDocument(text: string): AnalyzeResult {
-  const documentType = detectDocumentType(text)
+import { extractQualificationFromRawText } from '../qualification/extractMultiQualifications'
+
+//main function to analyze file document
+export function analyzeDocument(rawText: string): AnalyzeResult {
+  const documentType = detectDocumentType(rawText)
 
   let fields: ExtractionFields = {
     firstName: null,
@@ -18,22 +21,27 @@ export function analyzeDocument(text: string): AnalyzeResult {
     qualificationName: null,
     qualificationType: null,
     institutionName: null,
+    qualifications: [],
   }
 
+  //extracting field depending on doc type
   switch (documentType) {
     case 'id_card':
-      fields = { ...fields, ...extractFromIdCard(text) }
+      fields = { ...fields, ...extractFromIdCard(rawText) }
       break
     case 'passport':
-      fields = { ...fields, ...extractFromPassport(text) }
+      fields = { ...fields, ...extractFromPassport(rawText) }
       break
     case 'qualification':
-      fields = { ...fields, ...extractFromQualification(text) }
+      fields = { ...fields, ...extractFromQualification(rawText) }
       break
     default:
-      // leave the defaults (all null)
       break
   }
 
-  return { documentType, fields, rawText: text }
+  // retrieving multiple qualifications
+  const qualifications = extractQualificationFromRawText(rawText)
+  fields = { ...fields, qualifications }
+
+  return { documentType, fields, rawText: rawText }
 }
