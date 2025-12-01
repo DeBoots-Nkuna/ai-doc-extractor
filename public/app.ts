@@ -22,7 +22,6 @@ interface ExtractionFields {
 
 interface AnalyzeResponse {
   documentType: DocType
-  // Backend might return nested `fields` or flatten them at top-level
   fields?: ExtractionFields | null
   rawText: string
 }
@@ -80,6 +79,9 @@ const resultDiv = document.getElementById('result') as HTMLDivElement | null
 const fileInput = document.getElementById(
   'document-input'
 ) as HTMLInputElement | null
+const viewSummaryBtn = document.getElementById(
+  'view-summary-btn'
+) as HTMLAnchorElement | null
 
 // sanity checks
 if (!form || !statusDiv || !resultDiv || !fileInput) {
@@ -123,6 +125,24 @@ form.addEventListener('submit', async (event: SubmitEvent) => {
 
     const data = (await response.json()) as AnalyzeResponse
     statusDiv.textContent = 'Done.'
+    //saving data for summary page
+    console.log('ANALYZE RESULT FROM BACKEND:', data)
+
+    //flatting the returned data
+    const flatForSummary = {
+      documentType: data.documentType,
+      rawText: data.rawText,
+      ...data.fields,
+    }
+    localStorage.setItem('docAnalysis', JSON.stringify(flatForSummary))
+
+    //if statement
+    if (viewSummaryBtn) {
+      viewSummaryBtn.classList.remove('pointer-events-none', 'opacity-50')
+    }
+
+    //enabling the view summary btn
+
     renderResult(data)
   } catch (error) {
     console.error(error)
@@ -131,11 +151,10 @@ form.addEventListener('submit', async (event: SubmitEvent) => {
 })
 
 //result rendering method
-//result rendering method
 const renderResult = (data: AnalyzeResponse): void => {
   const { documentType, fields, rawText } = data
 
-  // 1) Safe doc type
+  //Safe doc type
   const safeDocType: DocType =
     documentType === 'passport' ||
     documentType === 'id_card' ||
@@ -143,7 +162,7 @@ const renderResult = (data: AnalyzeResponse): void => {
       ? documentType
       : 'unknown'
 
-  // 2) Safe fields
+  //Safe fields
   const fallbackFlatFields = extractFlatFieldsFromResponse(data)
   const safeFields: ExtractionFields = {
     firstName: null,
@@ -161,12 +180,11 @@ const renderResult = (data: AnalyzeResponse): void => {
     ...fallbackFlatFields,
   }
 
-  // 3) Check for the "totally unreadable" case
+  // Checking for the "totally unreadable" case
   const totallyUnknown =
     safeDocType === 'unknown' && areAllFieldsEmpty(safeFields)
 
-  // ---- Build DOM -------------------------------------------------
-
+  //Building UI DOM
   const docType = document.createElement('p')
   docType.className = 'mb-3'
 
@@ -186,7 +204,6 @@ const renderResult = (data: AnalyzeResponse): void => {
   let hasAnyRow = false
 
   if (totallyUnknown) {
-    // Special message row instead of 12x "Not provided"
     const tr = document.createElement('tr')
     tr.className = 'border-b border-slate-700/80'
 

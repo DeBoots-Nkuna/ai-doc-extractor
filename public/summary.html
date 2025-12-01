@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Qualifications Document Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="min-h-screen bg-slate-900 text-slate-100">
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur">
+      <div
+        class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 gap-3"
+      >
+        <h1 class="text-lg font-semibold text-indigo-300">Document Summary</h1>
+
+        <div class="flex items-center gap-2">
+          <button
+            id="download-csv-btn"
+            type="button"
+            class="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-50 shadow-sm hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 cursor-pointer"
+          >
+            Download as Excel (CSV)
+          </button>
+
+          <a
+            href="index.html"
+            class="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+          >
+            ← Back to Home
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-6 space-y-6">
+      <!-- Status message -->
+      <div
+        id="status"
+        class="rounded-md border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-200"
+      >
+        Loading summary…
+      </div>
+
+      <!-- Candidate overview -->
+      <section
+        id="person-card"
+        class="hidden rounded-xl border border-slate-800 bg-slate-900/70 p-4 shadow-md"
+      >
+        <h2 class="mb-3 text-base font-semibold text-indigo-300">
+          Candidate overview
+        </h2>
+        <dl class="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-slate-400">Full name</dt>
+            <dd id="field-fullName" class="font-medium text-slate-100">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-400">Date of birth</dt>
+            <dd id="field-dob" class="font-medium text-slate-100">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-400">Enrolment / ULN</dt>
+            <dd id="field-enrolment" class="font-medium text-slate-100">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-400">Document type</dt>
+            <dd id="field-docType" class="font-medium text-slate-100">–</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Qualifications table -->
+      <section
+        id="qualifications-section"
+        class="hidden rounded-xl border border-slate-800 bg-slate-900/70 p-4 shadow-md"
+      >
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h2 class="text-base font-semibold text-indigo-300">
+            Qualifications summary
+          </h2>
+          <p
+            id="qual-count"
+            class="text-xs font-medium uppercase tracking-wide text-slate-400"
+          ></p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-800 text-sm">
+            <thead class="bg-slate-950/60">
+              <tr>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  #
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Qualification
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Level
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Awarding Body
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Country
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Awarded Date
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Modules
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="qualifications-body"
+              class="divide-y divide-slate-800"
+            ></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- summary script -->
+    <script type="module" src="./summary.js"></script>
+  </body>
+</html>

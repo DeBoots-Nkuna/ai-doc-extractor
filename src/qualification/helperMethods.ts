@@ -59,7 +59,7 @@ export function extractCityAndGuildsLevel3(
       'Level 3 IVQ Technician Diploma in Electrical and Electronic Engineering',
     level: 'Level 3',
     awardingBody: 'The City and Guilds of London Institute',
-    country: null,
+    country: 'United Kingdom',
     awardedDate: null,
     modules,
   }
@@ -93,7 +93,7 @@ export function extractCityAndGuildsLevel5(
       'Level 5 IVQ Advanced Technician Diploma in Electrical and Electronic Engineering',
     level: 'Level 5',
     awardingBody: 'The City and Guilds of London Institute',
-    country: null,
+    country: 'United Kingdom',
     awardedDate: null,
     modules,
   }

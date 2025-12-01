@@ -23,7 +23,7 @@ export function isObviouslyNotName(value: string | null | undefined): boolean {
     return true
   }
 
-  // ID / label style things (identity number, student number, etc.)
+  // ID  label style
   if (
     /\b(STUDENT|IDENTITY|IDENTILY|LDENTITY|PASSPORT|ID)\b.*\b(NUMBER|NUMDER|NO\.?)\b/.test(
       upper
@@ -32,7 +32,6 @@ export function isObviouslyNotName(value: string | null | undefined): boolean {
     return true
   }
 
-  // "with effect from" + OCR glitches: woth / w1th / wlth ... from
   if (/\b(WITH|W1TH|WLTH|WOTH)\b.*\bFROM\b/.test(upper)) {
     return true
   }
@@ -42,7 +41,6 @@ export function isObviouslyNotName(value: string | null | undefined): boolean {
     return true
   }
 
-  // Role / title lines on certificates (not student names)
   if (
     /(REGISTRAR|VICE-?CHANCELLOR|CHANCELLOR|COMMISSIONER OF OATHS|ATTORNEY R\.S\.A)/.test(
       upper
@@ -54,15 +52,13 @@ export function isObviouslyNotName(value: string | null | undefined): boolean {
   return false
 }
 
-// Internal helper: does this line "shape" look like a human name?
+// method to identify if text presents a name
 function looksLikeName(line: string): boolean {
   const trimmed = line.trim()
   if (!trimmed) return false
 
   // No digits in names on official docs
   if (/\d/.test(trimmed)) return false
-
-  // Strip punctuation except spaces / apostrophe / hyphen
   const cleaned = trimmed.replace(/[^A-Za-z\s'-]/g, ' ')
   const parts = cleaned.split(/\s+/).filter(Boolean)
 
@@ -72,7 +68,7 @@ function looksLikeName(line: string): boolean {
   return true
 }
 
-// Try to find a name in the few lines after "AWARDED TO / TOEGEKEN AAN".
+//method to extract name inbetween sentences
 export function extractNameAroundAwardedTo(text: string): string | null {
   const lines = text
     .split(/\r?\n/)
@@ -85,7 +81,6 @@ export function extractNameAroundAwardedTo(text: string): string | null {
   const window = lines.slice(idx + 1, idx + 5)
 
   for (const line of window) {
-    // Skip obviously-not-name lines (IDs, headings, institution lines)
     if (isObviouslyNotName(line)) continue
 
     if (looksLikeName(line)) {
@@ -95,14 +90,13 @@ export function extractNameAroundAwardedTo(text: string): string | null {
 
   return null
 }
-
+//method to extract institution name
 export function extractInstitutionName(text: string): string | null {
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
 
-  // 1) Prefer "OBTAINED AT / VERWERF AAN" pattern
   const idx = lines.findIndex((l) => /obtained at|verwerf aan/i.test(l))
 
   if (idx !== -1 && idx + 1 < lines.length) {
@@ -118,7 +112,6 @@ export function extractInstitutionName(text: string): string | null {
     if (!cleaned) continue
 
     const words = cleaned.split(/\s+/).filter(Boolean)
-    // require at least 2 words to avoid "TECHNOLOGY" alone
     if (words.length < 2) continue
 
     const upper = cleaned.toUpperCase()
@@ -135,7 +128,7 @@ export function extractInstitutionName(text: string): string | null {
   return null
 }
 
-// Issue date: try "WITH EFFECT FROM" first, then ISO and other formats.
+//method to format dates
 export function extractIssueDate(text: string): string | null {
   const lines = text
     .split(/\r?\n/)
@@ -165,4 +158,32 @@ export function extractIssueDate(text: string): string | null {
   if (match) return match[0]
 
   return null
+}
+
+export function extractCandidateName(text: string): string | null {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+
+  const candidateLine = lines.find((l) => /candid[a-z]*\s+na\w*:/i.test(l))
+
+  if (!candidateLine) return null
+
+  // Take everything after the colon
+  const parts = candidateLine.split(':')
+  const afterColon = parts.length > 1 ? parts.slice(1).join(':') : ''
+  if (!afterColon) return null
+
+  // Cleaning OCR noise
+  const cleaned = afterColon
+    .replace(/[^A-Za-z\s'-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!cleaned) return null
+
+  if (isObviouslyNotName(cleaned)) return null
+
+  return cleaned
 }

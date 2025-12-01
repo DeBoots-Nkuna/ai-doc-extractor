@@ -5,6 +5,7 @@ import {
   extractIssueDate,
   isObviouslyNotName,
   extractNameAroundAwardedTo,
+  extractCandidateName,
 } from './qualificationHelpers'
 
 const QUALIFICATION_CONFIGS: FieldConfig[] = [
@@ -43,13 +44,19 @@ export function extractFromQualification(
   if (isObviouslyNotName(firstName)) firstName = null
   if (isObviouslyNotName(surname)) surname = null
 
-  // 3) Try infer name from lines around "AWARDED TO / TOEGEKEN AAN"
-  if (!fullNames) {
-    const aroundAwarded = extractNameAroundAwardedTo(text)
-    if (aroundAwarded) {
-      fullNames = aroundAwarded
-    }
-  }
+  //   if (!fullNames) {
+  //     const candidate = extractCandidateName(text)
+  //     if (candidate) {
+  //       fullNames = candidate
+  //     }
+  //   }
+
+  //   if (!fullNames) {
+  //     const aroundAwarded = extractNameAroundAwardedTo(text)
+  //     if (aroundAwarded) {
+  //       fullNames = aroundAwarded
+  //     }
+  //   }
 
   // 4) Placeholder like "namet1 surnamet1"
   if (!fullNames || !firstName || !surname) {
