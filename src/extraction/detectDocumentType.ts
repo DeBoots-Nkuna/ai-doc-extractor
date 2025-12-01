@@ -1,4 +1,5 @@
 import { DocumentType } from './types'
+import { looksLikeIdCard } from '../strategies/idCardHelper'
 
 export function detectDocumentType(text: string): DocumentType {
   const lower = text.toLowerCase()
@@ -17,15 +18,8 @@ export function detectDocumentType(text: string): DocumentType {
   const hasPassportKeywords =
     lower.includes('passport') || lower.includes('pasipoti')
 
-  // --- ID card hints (we *do not* blindly use "identity number") ---
-  const hasIdCardKeywords =
-    has13DigitId ||
-    lower.includes('identity card') ||
-    lower.includes('national identity card') ||
-    lower.includes('identity caro') ||
-    lower.includes('identity car') ||
-    // only treat "identity number" as ID-card-ish if we *don’t* see qualification clues
-    (lower.includes('identity number') && !hasQualificationKeywords)
+  // --- ID card hints (now using helper + 13-digit ID) ---
+  const hasIdCardKeywords = looksLikeIdCard(text) || has13DigitId
 
   // 1) If it clearly looks like a qualification, prefer that.
   if (hasQualificationKeywords) {

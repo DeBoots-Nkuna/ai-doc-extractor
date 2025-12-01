@@ -4,41 +4,50 @@ export function isObviouslyNotName(value: string | null | undefined): boolean {
   const trimmed = value.trim()
   if (!trimmed) return true
 
-  // Any digit => almost certainly not a pure name line
+  // Any digit => not a pure person name line
   if (/\d/.test(trimmed)) return true
 
   const upper = trimmed.toUpperCase()
 
   // Obvious headings / structural phrases
-  if (
-    /(AWARDED TO|TOEGEKEN AAN|OBTAINED AT|VERWERF AAN|WITH EFFECT FROM)/.test(
-      upper
-    )
-  ) {
+  if (/(AWARDED TO|TOEGEKEN AAN|OBTAINED AT|VERWERF AAN)/.test(upper)) {
     return true
   }
 
   // Institution / department keywords
   if (
-    /(UNIV|UNIVERSITY|COLLEGE|TECHN|TECIIN|POLYTEC|INSTITUTE|INSTITUUT|FACULTY|DEPARTMENT)/.test(
+    /(UNIV|UNIVERSITY|COLLEGE|TECHN|TECIIN|TECHNOLOGY|POLYTEC|INSTITUTE|INSTITUUT|FACULTY|DEPARTMENT)/.test(
       upper
     )
   ) {
     return true
   }
 
-  // ID / identity / student / passport number labels
+  // ID / label style things (identity number, student number, etc.)
   if (
-    (/\bIDENTITY\b/.test(upper) && /\b(NUMBER|NO\.?)\b/.test(upper)) ||
-    (/\bID\b/.test(upper) && /\b(NUMBER|NO\.?)\b/.test(upper)) ||
-    (/\bPASSPORT\b/.test(upper) && /\b(NUMBER|NO\.?)\b/.test(upper)) ||
-    (/\bSTUDENT\b/.test(upper) && /\b(NUMBER|NO\.?)\b/.test(upper))
+    /\b(STUDENT|IDENTITY|IDENTILY|LDENTITY|PASSPORT|ID)\b.*\b(NUMBER|NUMDER|NO\.?)\b/.test(
+      upper
+    )
   ) {
     return true
   }
 
-  // Date labels – also not names
+  // "with effect from" + OCR glitches: woth / w1th / wlth ... from
+  if (/\b(WITH|W1TH|WLTH|WOTH)\b.*\bFROM\b/.test(upper)) {
+    return true
+  }
+
+  // Date headings
   if (/DATE OF (ISSUE|BIRTH)/.test(upper)) {
+    return true
+  }
+
+  // Role / title lines on certificates (not student names)
+  if (
+    /(REGISTRAR|VICE-?CHANCELLOR|CHANCELLOR|COMMISSIONER OF OATHS|ATTORNEY R\.S\.A)/.test(
+      upper
+    )
+  ) {
     return true
   }
 
@@ -87,33 +96,39 @@ export function extractNameAroundAwardedTo(text: string): string | null {
   return null
 }
 
-// Institution: prefer the line after "OBTAINED AT / VERWERF AAN",
-// otherwise fall back to scanning for institution-ish keywords.
 export function extractInstitutionName(text: string): string | null {
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
 
-  // 1) Pattern: VERWERF AAN / OBTAINED AT
+  // 1) Prefer "OBTAINED AT / VERWERF AAN" pattern
   const idx = lines.findIndex((l) => /obtained at|verwerf aan/i.test(l))
 
   if (idx !== -1 && idx + 1 < lines.length) {
     const nextLine = lines[idx + 1]
     if (nextLine) {
-      return nextLine.replace(/\s{2,}/g, ' ').trim()
+      const cleaned = nextLine.replace(/\s{2,}/g, ' ').trim()
+      return cleaned || null
     }
   }
 
-  // 2) Fallback: look for institution-ish keywords
   for (const line of lines) {
-    const upper = line.toUpperCase()
+    const cleaned = line.replace(/\s{2,}/g, ' ').trim()
+    if (!cleaned) continue
+
+    const words = cleaned.split(/\s+/).filter(Boolean)
+    // require at least 2 words to avoid "TECHNOLOGY" alone
+    if (words.length < 2) continue
+
+    const upper = cleaned.toUpperCase()
+
     if (
-      /(UNIV|UNIVERSITY|COLLEGE|TECHN|TECIIN|POLYTEC|INSTITUTE|INSTITUUT)/.test(
+      /(UNIVERSITY|UNIV OF TECHNOLOGY|UNIVERSITY OF TECHNOLOGY|COLLEGE|TECHNIKON|INSTITUTE|INSTITUUT)/.test(
         upper
       )
     ) {
-      return line.trim()
+      return cleaned
     }
   }
 
